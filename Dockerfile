@@ -10,19 +10,25 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     unzip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd zip
+    && docker-php-ext-install gd zip pdo pdo_mysql
+
+# Install Composer globally
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Set the working directory
 WORKDIR /var/www/html
 
-# Copy the application files
+# Copy only the composer files first to leverage Docker cache
+COPY composer.json composer.lock ./
+
+# Debugging step: Check if composer.json is present
+RUN ls -la /var/www/html/
+
+# Install PHP dependencies with memory limit and verbosity
+RUN composer install --no-dev --optimize-autoloader --no-scripts --prefer-dist --ignore-platform-reqs --memory-limit=-1 -vvv
+
+# Copy the rest of the application files
 COPY . .
-
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
 
 # Set the appropriate permissions for storage and bootstrap/cache directories
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
