@@ -8,6 +8,7 @@ on:
     branches:
       - main
   workflow_dispatch:  # Allows manual trigger
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,6 +17,12 @@ jobs:
     # Checkout the code
     - name: Checkout code
       uses: actions/checkout@v2
+
+    # Install PHP dependencies
+    - name: Install Composer Dependencies
+      run: |
+        curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+        composer install --no-dev --optimize-autoloader
 
     # Set up Docker Buildx
     - name: Set up Docker Buildx
@@ -52,4 +59,3 @@ jobs:
     - name: Push Docker image to DockerHub
       run: |
         docker push ${{ secrets.DOCKER_USERNAME }}/my-laravel-app:latest
-
