@@ -7,7 +7,6 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:  # Allows manual trigger
 
 jobs:
   build:
@@ -37,7 +36,7 @@ jobs:
     # Run Laravel migrations
     - name: Run migrations
       run: |
-        docker run --env-file=$(pwd)/.env -v $(pwd):/var/www/html my-laravel-app php artisan migrate --force
+        docker run --env-file .env -v $(pwd):/var/www/html my-laravel-app php artisan migrate --force
       env:
         APP_KEY: ${{ secrets.APP_KEY }}
         MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
