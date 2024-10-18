@@ -1,71 +1,37 @@
-name: Deploy Laravel Application
+# Use the official PHP image with Nginx
+FROM php:8.2-fpm
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+# Install required extensions and tools
+RUN apt-get update && apt-get install -y \
+    nginx \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    unzip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd zip
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+# Set the working directory
+WORKDIR /var/www/html
 
-    steps:
-    # Checkout the code
-    - name: Checkout code
-      uses: actions/checkout@v2
+# Copy the application files
+COPY . .
 
-    # Set up Docker Buildx
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-    # Log in to DockerHub or another registry
-    - name: Log in to DockerHub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader
 
-    # Build the Docker image
-    - name: Build Docker image
-      run: |
-        docker build -t my-laravel-app .
+# Set the appropriate permissions for storage and bootstrap/cache directories
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-    # Run Laravel migrations
-    - name: Run migrations
-      run: |
-        docker run --env-file .env -v $(pwd):/var/www/html my-laravel-app php artisan migrate --force
-      env:
-        APP_KEY: ${{ secrets.APP_KEY }}
-        MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
-        MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
-        MYSQL_USER: ${{ secrets.MYSQL_USER }}
-        MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+# Configure Nginx
+COPY ./nginx/default.conf /etc/nginx/conf.d/default.conf
 
-    # Tag and push the Docker image to DockerHub
-    - name: Tag Docker image
-      run: |
-        docker tag my-laravel-app:latest ${{ secrets.DOCKER_USERNAME }}/my-laravel-app:latest
+# Expose port 80 to the outside world
+EXPOSE 80
 
-    - name: Push Docker image to DockerHub
-      run: |
-        docker push ${{ secrets.DOCKER_USERNAME }}/my-laravel-app:latest
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    # SSH into EC2 instance and deploy the Docker container
-    - name: Deploy to EC2
-      uses: appleboy/ssh-action@v0.1.3
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        script: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/my-laravel-app:latest
-          docker stop my-laravel-app || true
-          docker rm my-laravel-app || true
-          docker run -d -p 80:80 --name my-laravel-app --env-file /path/to/.env ${{ secrets.DOCKER_USERNAME }}/my-laravel-app:latest
+# Start both Nginx and PHP-FPM
+CMD service nginx start && php-fpm
