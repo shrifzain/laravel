@@ -12,17 +12,18 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd zip
 
+# Install Composer globally
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
 # Set the working directory
 WORKDIR /var/www/html
 
-# Copy the application files
-COPY . .
-
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# Install PHP dependencies
+# Copy composer files and install PHP dependencies (Composer will be cached if dependencies don't change)
+COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader
+
+# Copy the rest of the application files
+COPY . .
 
 # Set the appropriate permissions for storage and bootstrap/cache directories
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
