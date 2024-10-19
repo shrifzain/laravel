@@ -35,15 +35,20 @@ jobs:
     - name: Build Docker image
       run: |
         docker build -t my-laravel-app .
-
     - name: Run migrations
       run: |
-       docker run -e APP_KEY=${{ secrets.APP_KEY }} \
-               -e MYSQL_HOST=${{ secrets.MYSQL_HOST }} \
-               -e MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }} \
-               -e MYSQL_USER=${{ secrets.MYSQL_USER }} \
-               -e MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
-               -v $(pwd):/var/www/html my-laravel-app php artisan migrate --force
+        # Create a .env file from .env.example
+        cp .env.example .env
+    
+        # If you need to replace or add environment variables, you can do so here
+        echo "APP_KEY=${{ secrets.APP_KEY }}" >> .env
+        echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env
+        echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> .env
+        echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env
+        echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
+        docker run --env-file .env \
+                 -v $(pwd):/var/www/html my-laravel-app php artisan migrate --force
+
 
     # Tag and push the Docker image to DockerHub
     - name: Tag Docker image
