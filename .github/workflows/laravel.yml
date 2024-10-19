@@ -36,16 +36,14 @@ jobs:
       run: |
         docker build -t my-laravel-app .
 
-    # Run Laravel migrations
     - name: Run migrations
       run: |
-        docker run --env-file .env -v $(pwd):/var/www/html my-laravel-app php artisan migrate --force
-      env:
-        APP_KEY: ${{ secrets.APP_KEY }}
-        MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
-        MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
-        MYSQL_USER: ${{ secrets.MYSQL_USER }}
-        MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+       docker run -e APP_KEY=${{ secrets.APP_KEY }} \
+               -e MYSQL_HOST=${{ secrets.MYSQL_HOST }} \
+               -e MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }} \
+               -e MYSQL_USER=${{ secrets.MYSQL_USER }} \
+               -e MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
+               -v $(pwd):/var/www/html my-laravel-app php artisan migrate --force
 
     # Tag and push the Docker image to DockerHub
     - name: Tag Docker image
