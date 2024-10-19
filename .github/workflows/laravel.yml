@@ -41,15 +41,23 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Build the Docker image
+     # Build the Docker image
       - name: Build Docker image
         run: |
-          docker build -t my-laravel-app:1 .
+          docker build -t my-laravel-app:latest .
 
-      # Tag and push the Docker image to DockerHub
+      # Define the version variable (could be a manual version or derived from Git SHA)
+      - name: Set version
+        id: vars
+        run: |
+          echo "VERSION=$(date +'%Y%m%d%H%M')" >> $GITHUB_ENV
+
+      # Tag Docker image with the new version
       - name: Tag Docker image
         run: |
-          docker tag my-laravel-app:1 ${{ secrets.DOCKER_USERNAME }}/my-laravel-app:1
+          docker tag my-laravel-app:latest ${{ secrets.DOCKER_USERNAME }}/my-laravel-app:${{ env.VERSION }}
+
+      # Push Docker image to DockerHub
       - name: Push Docker image to DockerHub
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/my-laravel-app:1
+          docker push ${{ secrets.DOCKER_USERNAME }}/my-laravel-app:${{ env.VERSION }}
