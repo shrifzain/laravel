@@ -44,7 +44,7 @@ jobs:
       # Build the Docker image
       - name: Build Docker image
         run: |
-          docker build -t my-laravel-app .
+          docker build -t my-laravel-app:1 .
 
       # Tag and push the Docker image to DockerHub
       - name: Tag Docker image
