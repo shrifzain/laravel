@@ -37,14 +37,14 @@ jobs:
         docker build -t my-laravel-app .
     - name: Create .env file from .env.example
       run: |
-          cp .env.example .env
-          echo "APP_KEY=${{ secrets.APP_KEY }}" >> .env
-          echo "DB_HOST=${{ secrets.MYSQL_HOST }}" >> .env
-          echo "DB_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> .env
-          echo "DB_USERNAME=${{ secrets.MYSQL_USER }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
-          # Add any additional environment variables as needed
-          
+        cp .env.example .env
+        cat <<EOT >> .env
+        APP_KEY=${{ secrets.APP_KEY }}
+        DB_HOST=${{ secrets.MYSQL_HOST }}
+        DB_DATABASE=${{ secrets.MYSQL_DATABASE }}
+        DB_USERNAME=${{ secrets.MYSQL_USER }}
+        DB_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+        EOT
     - name: Install Composer Dependencies
       run: |
           docker run -v $(pwd):/var/www/html my-laravel-app composer install --no-interaction --prefer-dist
