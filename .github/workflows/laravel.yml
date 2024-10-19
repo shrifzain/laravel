@@ -35,20 +35,24 @@ jobs:
     - name: Build Docker image
       run: |
         docker build -t my-laravel-app .
+    - name: Create .env file from .env.example
+      run: |
+          cp .env.example .env
+          echo "APP_KEY=${{ secrets.APP_KEY }}" >> .env
+          echo "DB_HOST=${{ secrets.MYSQL_HOST }}" >> .env
+          echo "DB_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> .env
+          echo "DB_USERNAME=${{ secrets.MYSQL_USER }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
+          # Add any additional environment variables as needed
+          
+    - name: Install Composer Dependencies
+      run: |
+          docker run -v $(pwd):/var/www/html my-laravel-app composer install --no-interaction --prefer-dist
+
     - name: Run migrations
       run: |
-        # Create a .env file from .env.example
-        cp .env.example .env
-    
-        # If you need to replace or add environment variables, you can do so here
-        echo "APP_KEY=${{ secrets.APP_KEY }}" >> .env
-        echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env
-        echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> .env
-        echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env
-        echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
-        docker run --env-file .env \
-                 -v $(pwd):/var/www/html my-laravel-app php artisan migrate --force
-
+          docker run --env-file .env \
+                     -v $(pwd):/var/www/html my-laravel-app php artisan migrate --force
 
     # Tag and push the Docker image to DockerHub
     - name: Tag Docker image
