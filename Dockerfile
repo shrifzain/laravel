@@ -1,4 +1,3 @@
-
 # Use the official PHP image with Nginx
 FROM php:8.2-fpm
 
@@ -10,8 +9,10 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libzip-dev \
     unzip \
+    libonig-dev \
+    libmysqlclient-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd zip
+    && docker-php-ext-install gd zip pdo pdo_mysql
 
 # Set the working directory
 WORKDIR /var/www/html
