@@ -35,24 +35,6 @@ jobs:
     - name: Build Docker image
       run: |
         docker build -t my-laravel-app .
-    - name: Create .env file from .env.example
-      run: |
-        cp .env.example .env
-        cat <<EOT >> .env
-        APP_KEY=${{ secrets.APP_KEY }}
-        DB_HOST=${{ secrets.MYSQL_HOST }}
-        DB_DATABASE=${{ secrets.MYSQL_DATABASE }}
-        DB_USERNAME=${{ secrets.MYSQL_USER }}
-        DB_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-        EOT
-    - name: Install Composer Dependencies
-      run: |
-          docker run -v $(pwd):/var/www/html my-laravel-app composer install --no-interaction --prefer-dist
-
-    - name: Run migrations
-      run: |
-          docker run --env-file .env \
-                     -v $(pwd):/var/www/html my-laravel-app php artisan migrate --force
 
     # Tag and push the Docker image to DockerHub
     - name: Tag Docker image
